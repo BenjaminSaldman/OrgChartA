@@ -3,39 +3,29 @@
 #include <string>
 #include <queue>
 #include <stack>
+#include <iostream>
+
 const int BFS_SC=0;
 const int REV_BFS=1;
 const int ORD=2;
+using namespace std;
 namespace ariel{
      class OrgChart{
-
-        public:
-            
-            OrgChart(){root=nullptr;}
-            OrgChart& add_root(const string& val)
-            {
-                if(root==nullptr)
-                {
-                    root=new Node(val);
-                }else{
-                    root->val=val;
-                }
-                
-                return *this;
-            }
-           
-           
-
         
         private:
+       
+        /**
+         * @brief private node struct to represent n-tree -> tree with n childs.
+         * 
+         */
             struct Node{
                 string val;
                 vector<Node*>childs;
-                Node(string data):val(data){} 
+                Node(const string& data):val(data){} 
 
             };
-            
-            Node* root;
+        
+            Node* root; // tree root.
         public:
             class iterator{
                 private:
@@ -51,7 +41,7 @@ namespace ariel{
                     void BFS(Node* root)
                     {
                         queue<Node*>q; // queue, in the BFS scan we use a queue to save the nodes of the graph.
-                        if(root) // If the root isn't a null pointer we starting the scan, else the graph isn't exist.
+                        if(root!=nullptr) // If the root isn't a null pointer we starting the scan, else the graph isn't exist.
                         {
                             q.push(root);
                         }
@@ -80,29 +70,30 @@ namespace ariel{
                     void reverse_BFS(Node* root)
                     {
                         queue<Node*>q;
-                        if(root)
+                        if(root!=nullptr)
                         {
                             q.push(root);
                         }
                          while(!q.empty())
                         {
-                            size_t len=q.size();
+                            int len=q.size();
                             for(unsigned i=0;i<len;i++)
                             {
                                 Node* n=q.front();
                                 order.push_back(n);
                                 q.pop();
                                 // Here the condition changed: we push from the right to the left.
-                                for(int j=n->childs.size()-1;j>=0;j--)
+                                for(int j=(int)n->childs.size()-1;j>=0;j--)
                                 {
                                     q.push(n->childs.at((unsigned)j));
                                 }
                             }
                         }
+
                         // order now contains right to left BFS scan, we want to change the direction to 
                         // get reverse level order scan so we create a temp vector and replace the order vector.
                         vector<Node*>rev;
-                        for(int i=order.size()-1;i>=0;i--)
+                        for(int i=(int)order.size()-1;i>=0;i--)
                         {
                             rev.push_back(order.at((unsigned)i));
                         }
@@ -121,7 +112,7 @@ namespace ariel{
                     {
                         stack<Node*>st; // Stack that holds the nodes we didn't add to the order.
                       
-                        if(root)
+                        if(root!=nullptr)
                         {
                             st.push(root);
                         }
@@ -135,7 +126,7 @@ namespace ariel{
                             Node* curr=st.top();
                             st.pop();
                             order.push_back(curr);
-                            for(int i=curr->childs.size()-1;i>=0;i--)
+                            for(int i=(int)curr->childs.size()-1;i>=0;i--)
                             {
                                  st.push(curr->childs.at((unsigned)i));
                                 
@@ -145,7 +136,12 @@ namespace ariel{
             
 
                     }
-               
+                /**
+                 * @brief Construct a new iterator object
+                 * 
+                 * @param root 
+                 * @param CODE // type of iterator- level-order, preorder or reverse level-order.
+                 */
                     iterator(Node* root,const int CODE)
                     {
                         if(CODE==REV_BFS)
@@ -158,19 +154,34 @@ namespace ariel{
                                 preorder(root);
                             }
                             else{
-                                BFS(root);
+                                BFS(root); // default order, used for level order and begin.
                             }
                         }
-                        curr_num=0;
+                        curr_num=0; // pointer to first element in the list.
                     }
+                    /**
+                     * @brief 
+                     * 
+                     * @return the next element.
+                     */
                     string& operator*()
                     {
                         return order[curr_num]->val;
                     }
+                     /**
+                     * @brief 
+                     * 
+                     * @return the next element.
+                     */
                     string* operator->()
                     {
                          return &order[curr_num]->val;
                     }
+                    /**
+                     * @brief 
+                     * 
+                     * @return iterator& uses for ++it.
+                     */
                     iterator& operator++()
                     {
                         curr_num++;
@@ -180,6 +191,11 @@ namespace ariel{
                         }
                         return *this;
                     }
+                    /**
+                     * @brief 
+                     * 
+                     * @return iterator& uses for it++.
+                     */
                     iterator& operator++(int)
                     {
                         iterator temp=*this;
@@ -190,15 +206,24 @@ namespace ariel{
                         }
                         return *this;
                     }
+                    /**
+                     * @brief 
+                     * There are two cases:
+                     * both of the iterators are empty and than return true or
+                     * the sizes/objects are diffrent and than return false.
+                     * @param other 
+                     * @return true 
+                     * @return false 
+                     */
                     bool operator==(const iterator& other)
                     {
-                       if(order.size()!=0 && other.order.size()!=0)
+                       if(!order.empty()&& !other.order.empty())
                        {
                            return order[curr_num]==other.order[other.curr_num];
                        }
-                       else{
-                        return order.size()==0 && other.order.size()==0;
-                       }
+                        size_t t1=order.size();
+                        size_t t2=other.order.size();
+                        return t1==0 && t2==0;
                     }
                     bool operator!=(const iterator& other)
                     {
@@ -208,11 +233,16 @@ namespace ariel{
 
 
             };
+            /**
+             * @brief 
+             * 
+             * @return iterator used for forEach loop.
+             */
             iterator begin()
             {
                 return iterator(root,BFS_SC);
             }
-            iterator end()
+            static iterator end()
             {
                 return iterator(nullptr,BFS_SC);
             }
@@ -220,7 +250,7 @@ namespace ariel{
             {
                 return iterator(root,BFS_SC);
             }
-            iterator end_level_order()
+            static iterator end_level_order()
             {
                 return iterator(nullptr,BFS_SC);
             }
@@ -228,7 +258,7 @@ namespace ariel{
             {
                 return iterator(root,REV_BFS);
             }
-            iterator reverse_order()
+            static iterator reverse_order()
             {
                 return iterator(nullptr,REV_BFS);
             }
@@ -236,16 +266,24 @@ namespace ariel{
             {
                 return iterator(root,ORD);
             }
-            iterator end_preorder()
+            static iterator end_preorder()
             {
                 return iterator(nullptr,ORD);
             }
-            Node* findNode(Node* root ,const string& father)
+   
+            /**
+             * @brief 
+             * 
+             * @param root 
+             * @param father 
+             * @return Node* that his value is father.
+             */
+            static Node* findNode(Node* root ,const string& father)
             {
                 queue<Node*>q;
                 Node* ans=nullptr;
                 bool temp=true;
-                if(root)
+                if(root!=nullptr)
                 {
                     q.push(root);
                 }
@@ -270,23 +308,139 @@ namespace ariel{
                 }
                 return ans;
             }
-             OrgChart& add_sub(const string& father, const string& son)
+          
+  
+            /**
+             * @brief Construct a new Org Chart object used for make tidy...
+             * 
+             * @param other 
+             */
+            OrgChart(OrgChart& other)
             {
-                Node* n= findNode(root,father);
-                if(n==nullptr)
+                if(other.root==nullptr)
                 {
-                    throw invalid_argument{"Node isn't exist!"};
+                    root=nullptr;
+                }else{
+                    root=new Node(other.root->val);
+                    root->childs=other.root->childs;
+                }
+            }
+            /**
+             * @brief Construct a new Org Chart object used for make tidy...
+             * 
+             * @param other 
+             */
+            OrgChart& operator=(OrgChart other)
+            {
+                if(this==&other)
+                {
+                    return *this;
+                }
+                Node* temp=root;
+                root=new Node(other.root->val);
+                delete temp;
+                return *this;
+            }
+            /**
+             * @brief Construct a new Org Chart object used for make tidy...
+             * 
+             * @param other 
+             */
+            OrgChart& operator=(OrgChart &&other) noexcept
+            {
+                if(this==&other)
+                {
+                    return *this;
+                }
+                Node* temp=root;
+                root=new Node(other.root->val);
+                delete temp;
+                return *this;
+            }
+            /**
+             * @brief Construct a new Org Chart object used for make tidy...
+             * 
+             * @param other 
+             */
+            OrgChart(OrgChart && other) noexcept
+            {
+                root=other.root;
+            }
+            OrgChart(){root=nullptr;}
+                      
+            /**
+             * @brief 
+             * 
+             * @param father 
+             * @param son 
+             * @return OrgChart& insert a node to an existing parent.
+             * If the parent isn't exist, throw an exception.
+             */
+            OrgChart& add_sub(const string& father, const string& son)
+            {
+                if(root==nullptr)
+                {
+                    throw invalid_argument{"No root in the graph!"};
+                }
+                Node* n= findNode(root,father);
+                
+                if(n==nullptr){
+                    throw invalid_argument{"can't find node."};
+                    
                 }
                 Node* to_push=new Node(son);
                 n->childs.push_back(to_push);
                 return *this;
             }
+            OrgChart& add_root(const string& val)
+            {
+                if(root==nullptr)
+                {
+                    root=new Node(val);
+                }else{
+                    root->val=val;
+                }
+                
+                return *this;
+            }
+            ~OrgChart()
+            {
+                 queue<Node*>q; // queue, in the BFS scan we use a queue to save the nodes of the graph.
+                 vector<Node*>order;
+                 if(root!=nullptr) // If the root isn't a null pointer we starting the scan, else the graph isn't exist.
+                  {
+                    q.push(root);
+                  }
+                    // We scan till we covered all the nodes.
+                while(!q.empty())
+                {
+                    size_t len=q.size(); // The size of the current level.
+                    for(unsigned i=0;i<len;i++)
+                    {
+                        Node* n=q.front(); // Get the first child node (or root).
+                        order.push_back(n); // Push the node to the covered nodes.
+                        q.pop(); // Remove the node from the queue, we already used it.
+                        // Push the node's child to the queue.
+                        for(size_t j=0;j<n->childs.size();j++)
+                        {
+                            q.push(n->childs.at(j));
+                        }
+                    }
+                }
+                for(unsigned i=0;i<order.size();i++)
+                {
+                    delete order.at(i);
+                }
+            }
 
-        friend std::ostream& operator<<(ostream& output,const OrgChart& org){
+        friend std::ostream& operator<<(std::ostream& output,const OrgChart& org){
 
             queue<Node*>q;
+            
+            q.push(nullptr);
+            q.pop();
             Node* root=org.root;
-            if(root)
+            if(root!=nullptr)
             {
                 q.push(root);
             }
@@ -296,13 +450,14 @@ namespace ariel{
                 for(unsigned i=0;i<len;i++)
                 {
                     Node* n=q.front();
-                    output<<n->val<<endl; 
+                    output<<n->val<<' '; 
                     q.pop();
                     for(size_t j=0;j<n->childs.size();j++)
                     {
                         q.push(n->childs.at(j));
                     }
                 }
+                output<<'\n';
             }
             return output;
         }
